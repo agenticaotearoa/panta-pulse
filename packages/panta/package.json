@@ -1,0 +1,13 @@
+{
+  "name": "@panta-pulse/core",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "vitest": "^1.6"
+  }
+}
