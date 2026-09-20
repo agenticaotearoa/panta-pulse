@@ -1,5 +1,3 @@
-# no --wallet given; using deterministic simulation wallet ALnqmJhJQ2ySFcRHyMrFRYkBzb6SAm5rJhQvangAvma3
-# nothing is funded and nothing is broadcast.
 {
   "draft": {
     "question": "Will Solana achieve 100k transactions per second in a public stress test by December 31, 2024?",
@@ -34,5 +32,3 @@
     "note": "Local simulation only. This transaction was never broadcast. In production, your own wallet signs this step because Panta is non-custodial."
   }
 }
-
-Powered by Panta

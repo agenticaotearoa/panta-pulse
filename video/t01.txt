@@ -1,0 +1,10 @@
+Real run against live-api.panta.market  ·  2026-09-20
+
+headline  ->  LLM drafts the market
+          ->  validated against Panta's real constraints
+          ->  quote   (real USDC fee)
+          ->  build   (real unsigned Solana mainnet tx)
+          ->  wallet signs      <- we stop here, by design
+          ->  register (market goes live, titled)
+
+Nothing signed by us. Nothing broadcast. $0 spent.
