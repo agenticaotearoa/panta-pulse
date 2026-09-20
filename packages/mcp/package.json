@@ -1,17 +1,16 @@
 {
-  "name": "@panta-pulse/pipeline",
+  "name": "@panta-pulse/mcp",
   "type": "module",
   "bin": {
-    "panta-pulse": "./src/cli.ts"
+    "panta-pulse-mcp": "./src/server.ts"
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "start": "tsx src/cli.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@panta-pulse/core": "workspace:*",
-    "@solana/web3.js": "^1.98.4"
+    "@panta-pulse/pipeline": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5",

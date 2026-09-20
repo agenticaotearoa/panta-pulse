@@ -97,4 +97,33 @@ describe('PantaClient', () => {
     await expect(client.getCategories()).rejects.toBeInstanceOf(PantaError);
     await expect(client.getCategories()).rejects.toMatchObject({ code: 'unknown_error', status: 500 });
   });
+
+  it('fetches market trades from the trailing-slash endpoint', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ marketId: 'market-1', items: [] }), { status: 200 }));
+    const client = new PantaClient({ fetchImpl });
+    await client.getMarketTrades('market-1');
+    expect(String(fetchImpl.mock.calls[0]?.[0])).toBe('https://live-api.panta.market/api/v1/markets/market-1/trades/');
+  });
+
+  it('requests a signed image upload', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ uploadUrl: 'https://example.com' }), { status: 200 }));
+    const client = new PantaClient({ fetchImpl });
+    await client.requestImageUpload('image/png');
+    expect(fetchImpl).toHaveBeenCalledWith('https://live-api.panta.market/api/v1/markets/create/image-upload/', expect.objectContaining({ method: 'POST' }));
+    expect((fetchImpl.mock.calls[0]?.[1]?.body as string)).toContain('image/png');
+  });
+
+  it('gets trade status by signature', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'pending' }), { status: 200 }));
+    const client = new PantaClient({ fetchImpl });
+    await client.getTradeStatus('sig/with spaces');
+    expect(String(fetchImpl.mock.calls[0]?.[0])).toBe('https://live-api.panta.market/api/v1/trades/status/?signature=sig%2Fwith%20spaces');
+  });
+
+  it('reports a trade to the trailing-slash endpoint', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'reported' }), { status: 200 }));
+    const client = new PantaClient({ fetchImpl });
+    await client.reportTrade({ signature: 'sig', wallet: 'wallet', marketId: 'market-1' });
+    expect(fetchImpl).toHaveBeenCalledWith('https://live-api.panta.market/api/v1/trades/report/', expect.objectContaining({ method: 'POST' }));
+  });
 });

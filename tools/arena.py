@@ -116,35 +116,93 @@ def send(prompt):
 
 
 def read_reply(stable_for=3, max_wait=240):
-    """Poll until the transcript stops growing, then return the last assistant block."""
+    """Poll until generation is genuinely finished, then return the page transcript.
+
+    MEASURED BUG (2026-09-20): Battle mode renders a literal "Generating..." placeholder
+    while the models think. That placeholder is *stable*, so a naive stability check
+    settles after ~15s and captures an empty answer. Never settle while it is present.
+    """
     last, stable, waited = "", 0, 0
     while waited < max_wait:
         time.sleep(5)
         waited += 5
-        txt = oc_eval("""(() => {
-          const els = [...document.querySelectorAll(
-            '[data-message-author-role], .prose, main p, main div')];
-          return (document.body.innerText || '');
-        })()""")
-        if isinstance(txt, str) and txt == last:
+        txt = oc_eval("(document.body.innerText || '')")
+        if not isinstance(txt, str):
+            continue
+        pending = ("Generating..." in txt) or ("Generating…" in txt)
+        if txt == last and not pending:
             stable += 1
             if stable >= stable_for:
                 return last
         else:
             stable = 0
-            last = txt if isinstance(txt, str) else last
+            last = txt
     return last
 
 
-def extract(reply):
-    """Pull the assistant answer out of the page transcript."""
+def extract(reply, prompt=None):
+    """Pull the assistant answer out of the page transcript.
+
+    The transcript echoes our own prompt, which in a file-bundle task contains the
+    block-format example — parsing the echo wrote a junk file called
+    'relative/path/from/repo/root'. Cut everything up to the end of the prompt echo.
+    """
     if not isinstance(reply, str):
         return ""
-    # Drop the boilerplate footer arena always renders.
+    if prompt:
+        marker = prompt.strip()[-60:]
+        idx = reply.rfind(marker)
+        if idx > 0:
+            reply = reply[idx + len(marker):]
     cut = reply.find("Inputs are processed by third-party AI")
     if cut > 0:
         reply = reply[:cut]
     return reply.strip()
+
+
+FILE_RE = re.compile(
+    r"^[=\-*#\s]*FILE:\s*(\S+?)\s*[=\-*#]*$([\s\S]*?)(?=^[=\-*#\s]*FILE:\s*\S|^[=\-*#\s]*END[=\-*#\s]*$|\Z)",
+    re.MULTILINE)
+
+
+def parse_file_bundle(text):
+    """Extract {path: content} from an arena reply.
+
+    Arena returns two anonymous answers in Battle mode, so the same path can appear
+    twice. Keep the LONGEST body per path: the more complete answer wins, which is
+    exactly the tie-break we want between two frontier models.
+    """
+    out = {}
+    for m in FILE_RE.finditer(text or ""):
+        path = m.group(1).strip().strip("`'\"")
+        body = m.group(2)
+        # strip a single surrounding code fence if the model added one
+        body = re.sub(r"^\s*```[a-zA-Z0-9]*\s*\n", "", body)
+        body = re.sub(r"\n```\s*$", "\n", body)
+        if not path or "/" not in path and "." not in path:
+            continue
+        if len(body.strip()) < 20:
+            continue
+        if len(body) > len(out.get(path, "")):
+            out[path] = body if body.endswith("\n") else body + "\n"
+    return out
+
+
+def write_bundle(bundle, root):
+    import os
+    written = []
+    for path, body in sorted(bundle.items()):
+        # never let a model escape the repo root
+        safe = os.path.normpath(path).lstrip("/")
+        if safe.startswith(".."):
+            print(f"REFUSED (escapes root): {path}", file=sys.stderr)
+            continue
+        full = os.path.join(root, safe)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w", encoding="utf-8") as f:
+            f.write(body)
+        written.append((safe, len(body.splitlines())))
+    return written
 
 
 def main():
@@ -154,6 +212,10 @@ def main():
     ap.add_argument("--prompt")
     ap.add_argument("--prompt-file")
     ap.add_argument("--out")
+    ap.add_argument("--files", metavar="ROOT",
+                    help="parse ===FILE: path=== blocks from the reply and write them under ROOT")
+    ap.add_argument("--min-stable-samples", type=int, default=5,
+                    help="consecutive identical polls before treating generation as finished")
     ap.add_argument("--url", default=URL)
     ap.add_argument("--wait", type=int, default=240)
     a = ap.parse_args()
@@ -174,12 +236,20 @@ def main():
     print("textareas:", textareas(), file=sys.stderr)
     print("send:", send(prompt), file=sys.stderr)
 
-    raw = read_reply(max_wait=a.wait)
-    answer = extract(raw)
+    raw = read_reply(stable_for=a.min_stable_samples, max_wait=a.wait)
+    answer = extract(raw, prompt)
+    if a.files:
+        bundle = parse_file_bundle(answer)
+        if not bundle:
+            print("NO FILE BLOCKS PARSED — reply follows:", file=sys.stderr)
+            print(answer[-1500:], file=sys.stderr)
+            return 3
+        for path, lines in write_bundle(bundle, a.files):
+            print(f"wrote {path} ({lines} lines)", file=sys.stderr)
     if a.out:
         open(a.out, "w", encoding="utf-8").write(answer)
         print(f"wrote {a.out} ({len(answer)} chars)", file=sys.stderr)
-    else:
+    if not a.out and not a.files:
         print(answer)
     return 0
 

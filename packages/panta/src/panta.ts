@@ -167,6 +167,16 @@ export interface QuoteCreateRequest {
   imageUrl: string;
 }
 
+export interface ImageUploadRequest {
+  contentType: string;
+}
+
+export interface TradeReport {
+  signature: string;
+  wallet: string;
+  marketId: string;
+}
+
 function withTrailingSlash(value: string): string {
   return value.endsWith('/') ? value : `${value}/`;
 }
@@ -215,6 +225,22 @@ export class PantaClient {
     return this.json(`markets/${encodeURIComponent(id)}`);
   }
 
+  async getMarketTrades(marketId: string): Promise<unknown> {
+    return this.json(`markets/${encodeURIComponent(marketId)}/trades/`);
+  }
+
+  async requestImageUpload(contentType: string): Promise<unknown> {
+    return this.json('markets/create/image-upload/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentType }),
+    });
+  }
+
+  async getTradeStatus(signature: string): Promise<unknown> {
+    return this.json(`trades/status/?signature=${encodeURIComponent(signature)}`);
+  }
+
   async getCategories(): Promise<unknown> {
     return this.json('categories');
   }
@@ -235,7 +261,7 @@ export class PantaClient {
     return this.json(`create/${encodeURIComponent(createId)}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signature }) });
   }
 
-  async reportTrade(body: { signature: string; wallet: string; marketId: string }): Promise<unknown> {
-    return this.json('trades/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  async reportTrade(body: TradeReport): Promise<unknown> {
+    return this.json('trades/report/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   }
 }
