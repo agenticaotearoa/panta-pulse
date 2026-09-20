@@ -2,6 +2,9 @@
   "name": "@panta-pulse/core",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/panta.ts"
+  },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

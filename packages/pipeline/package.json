@@ -1,0 +1,20 @@
+{
+  "name": "@panta-pulse/pipeline",
+  "type": "module",
+  "bin": {
+    "panta-pulse": "./src/cli.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@panta-pulse/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "vitest": "^1.6",
+    "tsx": "^4"
+  }
+}

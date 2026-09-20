@@ -28,6 +28,31 @@ importers:
         specifier: ^1.0.0
         version: 1.6.1(@types/node@20.19.43)(@vitest/ui@1.6.1)
 
+  packages/panta:
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6
+        version: 1.6.1(@types/node@20.19.43)(@vitest/ui@1.6.1)
+
+  packages/pipeline:
+    dependencies:
+      '@panta-pulse/core':
+        specifier: workspace:*
+        version: link:../panta
+    devDependencies:
+      tsx:
+        specifier: ^4
+        version: 4.23.15
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6
+        version: 1.6.1(@types/node@20.19.43)(@vitest/ui@1.6.1)
+
 packages:
 
   '@esbuild/aix-ppc64@0.21.5':
