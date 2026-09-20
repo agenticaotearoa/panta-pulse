@@ -80,7 +80,7 @@ describe('PantaClient', () => {
     const client = new PantaClient({ apiKey: 'secret', fetchImpl });
     await client.listMarkets({ limit: 2 });
     expect(fetchImpl).toHaveBeenCalled();
-    expect(String(fetchImpl.mock.calls[0]?.[0])).toMatch(/\/markets\?limit=2$/);
+    expect(String(fetchImpl.mock.calls[0]?.[0])).toMatch(/\/markets\/\?limit=2$/);
     expect(fetchImpl.mock.calls[0]?.[1]?.headers).toBeInstanceOf(Headers);
     expect((fetchImpl.mock.calls[0]?.[1]?.headers as Headers).get('X-Api-Key')).toBe('secret');
   });

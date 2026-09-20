@@ -1,0 +1,38 @@
+# no --wallet given; using deterministic simulation wallet ALnqmJhJQ2ySFcRHyMrFRYkBzb6SAm5rJhQvangAvma3
+# nothing is funded and nothing is broadcast.
+{
+  "draft": {
+    "question": "Will Solana achieve 100k transactions per second in a public stress test by December 31, 2024?",
+    "resolutionRule": "The market resolves to 'yes' if Solana's network is reported to have processed 100,000 transactions per second in a publicly accessible stress test conducted by Solana or its affiliates, as documented in official sources, before the resolution time. The test must be publicly announced and verifiable.",
+    "sourcesOfTruth": [
+      "https://solana.com/news",
+      "https://www.coindesk.com/tag/solana/",
+      "https://cointelegraph.com/tags/solana"
+    ],
+    "category": "crypto",
+    "imageUrl": "https://www.panta.market/favicon.png",
+    "startTime": 1789944782,
+    "endTime": 1789948382,
+    "resolutionTime": 1789948382,
+    "rationale": "This market is measurable because the achievement of 100k TPS in a public stress test is a specific technical milestone that can be objectively verified through official announcements, technical reports, and credible news sources covering Solana's developments."
+  },
+  "feeUsdc": "50.00",
+  "derived": {
+    "event": "GE18VEH5iKvonWrh8ukHBmxJAh1dWWEU41khMXMY3AtG",
+    "vaultAuthority": "DFNFN9QTC6ZwBSHo4eLMHwwhoqefaA79PTDb7X3NuR7i",
+    "marketConfig": "8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP",
+    "creatorWhitelist": "3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt",
+    "creatorFeeVault": "GxRtUAqbQU7PQMVtg3iPDd21nv66AcvteWoqJ9Gg31jn",
+    "creatorPosition": "GbbWELRGNhLuk6t4SdGXmjAJ7akT6uYiJGbU1i4rLzvn",
+    "creatorTokenAccount": "HduGaXEBq8irq1vreJFZDQ1ueFB4UoC9HqZEdXc7qhqw",
+    "vaultTokenAccount": "GFFnt1G2uzcmogCuPgJ76oKmKvtibv6YmSio7pvLCZW9",
+    "treasuryTokenAccount": "9hwZLD2JZuWFDDQXEnHsnny7EF2LeyHqwcMFVssYEGpC"
+  },
+  "unsignedTransaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQAIEYrLDM3/ordR67CNcJRfEgjtOAw6b6v3ZxRrZnRvTKukgVpqgvc1EWXAeoybXVkomM9gzASo3H+Hd4siXRXLwoWNY6N/YKWUZ3f7IMltiStjtadepETptwOHU7/uZsBRtLX6ZjWNO5ywoCmBk39uR2IVnsMO6Hi8v1zI6T91EVcV4jQAF/hrogrmst//uSuL16wXN63DeMvkUD06htwKFyHihijUGcyNatdy51m1rmlfAZ/923rzo/YxFBb4SwsN4ue8EK5YC8GGg4gXCg/ppvBxulbbQUGTd5ntK17l/05b7RJjfrtQWATHwu6AZQ2gISMKci9KsXqMTKLxZgI2DFH3LwAO02nX946UMnsvjX8qTtNVG702i7aO8wxw3Vzl9gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwZGb+UhFzL/7K26csOb57yM5bvF9xJrLEObOkAAAAAG3fbh12Whk9nL4UbO63msHLSF7V9bN5E6jPWFfv8AqSgj5fK672ebG0qKvqytmbJyLaxSCJR4b0brJDOkbWENVF7KIBZj7LY/0UC7ZoTJpoZL1HzOEVaf+6th8u3ycwdzW2r89NtAtgRMz+3R31ydzAHNeUlOo6kqAKng1SelMIyXJY9OJInxuz0QKRSODYMLWhOZ2v8QhASOe9jb6fhZxvp6877brTo9ZfNqq8l0MbG75MLS9uDkfKYCA0UvXWE60h9/4qm5caAuCuf3TSN1KkLfd085+yk8IlAh//iBEwMKAAUCgBoGAA8GAAgAEAkLAQENDwAODAQDBQcCBhAIAQsPCZoEUAnM1ZbbV6IDZLBqAAAAABNysGoAAAAAE3KwagAAAAA7AAAAV2lsbCBCaXRjb2luIHJlYWNoIG9yIGV4Y2VlZCAkMTAwLDAwMCBieSBEZWNlbWJlciAzMSwgMjAyND+A8PoCAAAAACUBAABUaGlzIG1hcmtldCByZXNvbHZlcyB0byAneWVzJyBpZiB0aGUgcHJpY2Ugb2YgQml0Y29pbiByZWFjaGVzIG9yIGV4Y2VlZHMgJDEwMCwwMDAgYXQgYW55IHBvaW50IGJldHdlZW4gc3RhcnRUaW1lIGFuZCBlbmRUaW1lLCBhcyB2ZXJpZmllZCBieSB0aGUgQ29pbkRlc2sgQml0Y29pbiBQcmljZSBJbmRleCAoQ0JQSSkgb3IgQ29pbk1hcmtldENhcCdzIEJpdGNvaW4gcHJpY2UgcGFnZS4gVGhlIHByaWNlIG11c3QgYmUgcmVjb3JkZWQgaW4gVVNEIGFuZCBiYXNlZCBvbiBhIHJlcHV0YWJsZSBleGNoYW5nZSByYXRlLgMAAAAnAAAAaHR0cHM6Ly93d3cuY29pbmRlc2suY29tL3ByaWNlL2JpdGNvaW4vLQAAAGh0dHBzOi8vY29pbm1hcmtldGNhcC5jb20vY3VycmVuY2llcy9iaXRjb2luLyYAAABodHRwczovL3d3dy5jb2luYmFzZS5jb20vcHJpY2UvYml0Y29pbgA=",
+  "simulatedSignature": {
+    "signerPublicKey": "ALnqmJhJQ2ySFcRHyMrFRYkBzb6SAm5rJhQvangAvma3",
+    "note": "Local simulation only. This transaction was never broadcast. In production, your own wallet signs this step because Panta is non-custodial."
+  }
+}
+
+Powered by Panta
