@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Panta Pulse — turn a headline into a live prediction market</title>
+<meta name="description" content="Agent-native market-creation engine for Panta. Draft, validate, quote and build unsigned Solana transactions from a news headline. Powered by Panta." />
+<style>
+  :root{
+    --bg:#08090c; --panel:#101218; --panel2:#161923; --line:#232838;
+    --ink:#eef1f7; --dim:#9aa3b8; --dim2:#6c7488;
+    --accent:#5eead4; --accent2:#a78bfa; --warn:#fbbf24;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line);padding:18px 0;position:sticky;top:0;
+    background:rgba(8,9,12,.85);backdrop-filter:blur(10px);z-index:10}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:650;letter-spacing:-.01em}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 14px var(--accent)}
+  nav a{color:var(--dim);font-size:14px;margin-left:18px}
+  .hero{padding:76px 0 44px}
+  h1{font-size:clamp(30px,5.2vw,52px);line-height:1.08;letter-spacing:-.03em;margin:0 0 18px;
+    font-weight:700}
+  h1 .g{background:linear-gradient(92deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{font-size:19px;color:var(--dim);max-width:62ch;margin:0 0 26px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .btn{display:inline-block;padding:11px 18px;border-radius:9px;font-weight:600;font-size:14.5px;
+    border:1px solid var(--line);color:var(--ink);background:var(--panel)}
+  .btn.p{background:linear-gradient(92deg,var(--accent),#46d3bd);color:#04231e;border-color:transparent}
+  .btn:hover{text-decoration:none;transform:translateY(-1px)}
+  section{padding:40px 0;border-top:1px solid var(--line)}
+  h2{font-size:23px;letter-spacing:-.02em;margin:0 0 8px;font-weight:650}
+  .sub{color:var(--dim2);font-size:14px;margin:0 0 22px}
+  .flow{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;
+    font-family:var(--mono);font-size:13.2px;overflow-x:auto;color:var(--dim);line-height:2}
+  .flow b{color:var(--ink);font-weight:600}
+  .flow .ok{color:var(--accent)}
+  .flow .stop{color:var(--warn)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:18px}
+  .card h3{margin:0 0 6px;font-size:15px;font-weight:640}
+  .card p{margin:0;color:var(--dim);font-size:14px}
+  .kpi{font-family:var(--mono);font-size:25px;color:var(--accent);font-weight:600;
+    letter-spacing:-.02em;word-break:break-all}
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim2);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em}
+  td.mono{font-family:var(--mono);font-size:12.6px;color:var(--accent);word-break:break-all}
+  .pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:600;
+    border:1px solid var(--line);color:var(--dim);background:var(--panel2)}
+  .pill.ok{color:var(--accent);border-color:rgba(94,234,212,.35)}
+  .pill.warn{color:var(--warn);border-color:rgba(251,191,36,.3)}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:15px;
+    overflow-x:auto;font-family:var(--mono);font-size:12.8px;color:var(--dim);margin:0}
+  pre b{color:var(--ink)}
+  footer{border-top:1px solid var(--line);padding:30px 0 46px;color:var(--dim2);font-size:13.6px}
+  footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .attr{font-weight:600;color:var(--dim)}
+  code{font-family:var(--mono);font-size:.9em;background:var(--panel2);
+    border:1px solid var(--line);border-radius:5px;padding:1.5px 5px;color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span> Panta Pulse</div>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#proof">Verified output</a>
+      <a href="#embed">Embed</a>
+      <a href="https://github.com/agenticaotearoa/panta-pulse">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>Turn a headline into a <span class="g">live prediction market</span>.</h1>
+    <p class="lede">
+      Panta Pulse is an agent-native creation engine for Panta. Give it a news item: it drafts the
+      market, validates it against Panta's real on-chain constraints, gets the real fee quoted, and
+      builds the real unsigned Solana transaction for a wallet to sign.
+    </p>
+    <div class="cta">
+      <a class="btn p" href="https://github.com/agenticaotearoa/panta-pulse">View the source</a>
+      <a class="btn" href="#proof">See the verified run</a>
+      <span class="pill ok">60 tests green</span>
+      <span class="pill">$0 spent</span>
+    </div>
+  </div>
+
+  <section id="how">
+    <h2>Creation, not another destination</h2>
+    <p class="sub">
+      The brief asked what prediction markets become when they are built <em>into other products</em>.
+      So this is the engine other products call — not a place to browse markets.
+    </p>
+    <div class="flow">
+      headline <b>──▶</b> LLM drafts market<br />
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>──▶</b> validated against Panta's constraints<br />
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>──▶</b> <span class="ok">POST</span> /markets/create/quote/ &nbsp;<span class="ok">→ real USDC fee</span><br />
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>──▶</b> <span class="ok">POST</span> /markets/create/build/ &nbsp;<span class="ok">→ real unsigned mainnet tx</span><br />
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>──▶</b> <span class="stop">wallet signs — we stop here, by design</span><br />
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>──▶</b> <span class="ok">POST</span> /markets/create/register/ &nbsp;<span class="ok">→ market live and titled</span>
+    </div>
+    <p class="sub" style="margin-top:18px">
+      The engine never signs and never broadcasts. That is Panta's custody model, in their words:
+      <em>"Panta cooks the transaction. The user signs. You file it on-chain."</em>
+    </p>
+  </section>
+
+  <section id="proof">
+    <h2>Verified against the live API</h2>
+    <p class="sub">A real run on 2026-09-20 against <code>live-api.panta.market</code> — no mocks, nothing spent.</p>
+    <div class="grid" style="margin-bottom:22px">
+      <div class="card">
+        <h3>Quoted fee</h3>
+        <div class="kpi">50.00 USDC</div>
+        <p>40 platform + 10 liquidity injection</p>
+      </div>
+      <div class="card">
+        <h3>Unsigned transaction</h3>
+        <div class="kpi">1,632 <span style="font-size:14px;color:var(--dim2)">chars base64</span></div>
+        <p>Real Solana mainnet versioned transaction</p>
+      </div>
+      <div class="card">
+        <h3>Broadcast</h3>
+        <div class="kpi" style="color:var(--warn)">never</div>
+        <p>Local deterministic signing only</p>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Derived on-chain account</th><th>Address</th></tr></thead>
+      <tbody>
+        <tr><td>event</td><td class="mono">GE18VEH5iKvonWrh8ukHBmxJAh1dWWEU41khMXMY3AtG</td></tr>
+        <tr><td>vaultAuthority</td><td class="mono">DFNFN9QTC6ZwBSHo4eLMHwwhoqefaA79PTDb7X3NuR7i</td></tr>
+        <tr><td>marketConfig</td><td class="mono">8mJjfx7SuWwS4yfVZXtqC2cvzxr3TQHsCgKyjpuDWKAP</td></tr>
+        <tr><td>creatorWhitelist</td><td class="mono">3hh4H3AdyqmSeJhyPq2h7Pro2t8QrC7iwYgC8YRDLgGt</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="embed">
+    <h2>The embeddable surface</h2>
+    <p class="sub">
+      This is the part that lives inside someone else's product. A normalised market becomes a
+      generic card, or a Discord webhook payload, in one call.
+    </p>
+    <pre><b>renderDiscordMessage(toEmbedCard(status, { appBaseUrl, createdFrom }))</b>
+
+{
+  "content": "Will Solana hit 100k TPS? — <b>Powered by Panta</b>",
+  "embeds": [{
+    "title": "Will Solana hit 100k TPS?",
+    "url":   "https://app.example/market/EWiohz3L…",
+    "description": "Reuters headline\nYES 62.0% · NO 38.0% · primary",
+    "footer": { "text": "<b>Powered by Panta</b>" }
+  }]
+}</pre>
+    <p class="sub" style="margin-top:16px">
+      There is also an <strong>MCP server</strong> exposing five Panta tools, so any agent can create
+      and read markets without writing an integration.
+    </p>
+  </section>
+
+  <section>
+    <h2>The catalogue is text-poor. We say so.</h2>
+    <p class="sub">Measured over a live page of 50 markets.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>50 / 50</h3>
+        <p>markers with an <strong>empty <code>title</code></strong> field.</p>
+      </div>
+      <div class="card">
+        <h3>8 / 50</h3>
+        <p>carried any description at all — the rest are image-only.</p>
+      </div>
+      <div class="card">
+        <h3>4 states</h3>
+        <p><code>textQuality</code> reports honestly: full, description-only, image-only, none.</p>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:18px">
+      Markets created here are born with a question, a resolution rule and named sources of truth —
+      which is the point.
+    </p>
+  </section>
+
+  <section>
+    <h2>Two API behaviours that cost real debugging time</h2>
+    <table>
+      <thead><tr><th>Behaviour</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Trailing slash on the path</td>
+          <td><code>/markets/?limit=2</code> is correct. <code>/markets?limit=2</code> is a different, wrong route.</td>
+        </tr>
+        <tr>
+          <td>Image host validation</td>
+          <td><code>imageUrl</code> is soft-checked at <em>quote</em> and hard-checked at <em>build</em>. One popular placeholder host passes quote and then dies at build with an opaque <code>unexpected create build failure</code>.</td>
+        </tr>
+        <tr>
+          <td>Mixed timestamp shapes</td>
+          <td>Unix seconds on mainnet, ISO strings in sandbox. The normaliser accepts both.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="attr">Powered by Panta</div>
+      <div style="margin-top:6px">Attribution required by the Panta API Terms of Use §6.</div>
+    </div>
+    <div>
+      <a href="https://github.com/agenticaotearoa/panta-pulse">GitHub</a> ·
+      <a href="https://panta.market">panta.market</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
