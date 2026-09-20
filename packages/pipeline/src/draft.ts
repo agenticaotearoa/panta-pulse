@@ -11,6 +11,17 @@ export const PANTA_CATEGORIES: readonly string[] = [
   'other',
 ] as const;
 
+/**
+ * Fallback image for a drafted market. Panta requires a publicly reachable image and
+ * rejects article links, so the source URL cannot be used here.
+ *
+ * Verified by live call 2026-09-20: this URL completes BOTH create/quote and
+ * create/build. https://placehold.co/1024x1024.png did NOT — it passes the soft
+ * check at quote time and then fails at build with an opaque 400
+ * "unexpected create build failure", which is a miserable way to lose a demo.
+ */
+export const DEFAULT_MARKET_IMAGE = 'https://www.panta.market/favicon.png';
+
 export interface MarketDraft {
   question: string;
   resolutionRule: string;
@@ -138,16 +149,28 @@ export async function draftFromNews(input: NewsInput, llm: (prompt: string) => P
   const defaultStart = nowSeconds + 7200;
   const defaultEnd = nowSeconds + 7 * 24 * 60 * 60;
   const defaultResolution = defaultEnd + 3600;
-  const startTime = asNumber(parsed.startTime) ?? defaultStart;
-  const endTime = asNumber(parsed.endTime) ?? defaultEnd;
-  const resolutionTime = asNumber(parsed.resolutionTime) ?? defaultResolution;
+  // Clamp, do not merely default. Panta enforces `minimumStartDelay` (~3600s) on chain
+  // and requires startTime < endTime <= resolutionTime. Measured live: a model-supplied
+  // startTime only minutes out was accepted by validateDraft's shape checks but rejected
+  // by the API with "startTime must be at least 3600s ahead of now". A model must never
+  // be able to produce a draft the API will refuse.
+  const MIN_START_DELAY = 3600;
+  const earliestStart = nowSeconds + MIN_START_DELAY + 60;
+  const startTime = Math.max(asNumber(parsed.startTime) ?? defaultStart, earliestStart);
+  const endTime = Math.max(asNumber(parsed.endTime) ?? defaultEnd, startTime + MIN_START_DELAY);
+  const resolutionTime = Math.max(
+    asNumber(parsed.resolutionTime) ?? defaultResolution,
+    endTime,
+  );
   const sourcesOfTruth = asStringArray(parsed.sourcesOfTruth);
   const draft: MarketDraft = {
     question: asString(parsed.question).trim() || `${input.headline.trim()}?`,
     resolutionRule: asString(parsed.resolutionRule).trim() || `Resolve YES only if authoritative sources confirm the event described by: ${input.headline}. Otherwise resolve NO.`,
     sourcesOfTruth: sourcesOfTruth.length > 0 ? sourcesOfTruth : [input.sourceUrl],
     category: asString(parsed.category).trim() || input.category || 'other',
-    imageUrl: asString(parsed.imageUrl).trim() || input.imageUrl || input.sourceUrl,
+    // Panta requires a publicly reachable IMAGE, not the article URL. Measured: a news
+    // page used as imageUrl is rejected by the API's soft validation (HTTP 400).
+    imageUrl: asString(parsed.imageUrl).trim() || input.imageUrl || DEFAULT_MARKET_IMAGE,
     startTime,
     endTime,
     resolutionTime,

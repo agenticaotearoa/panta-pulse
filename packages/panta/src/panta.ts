@@ -53,7 +53,12 @@ export class PantaError extends Error {
 }
 
 function isPresent(value: string | null | undefined): value is string {
-  return value !== null && value !== undefined && value.trim().length > 0;
+  // MUST type-check before calling .trim(). The live API returns numeric fields
+  // (for example a numeric totalVolumeUsdc), so a non-string here crashed with
+  // "Cannot read properties of undefined (reading 'trim')".
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  return true;
 }
 
 function firstPrice(...values: Array<number | string | null | undefined>): number | null {
@@ -197,12 +202,33 @@ export class PantaClient {
     if (this.apiKey) headers.set('X-Api-Key', this.apiKey);
     const response = await this.fetchImpl(`${this.baseUrl}${path.replace(/^\/+/, '')}`, { ...init, headers });
     if (response.ok) return response;
+    // Read the body ONCE as text, then try to parse it. Calling response.json()
+    // directly loses the payload whenever the API returns non-JSON (measured: a
+    // rejected create-quote produced an HTML error page, and the user saw only
+    // "Request failed" with no status and no reason).
+    let rawText = '';
+    try {
+      rawText = await response.text();
+    } catch {
+      // A body can be unreadable (already consumed, or a broken stream). Never let
+      // that replace the real error — we still know the status code.
+      rawText = '';
+    }
     let body: { code?: string; message?: string; fields?: Record<string, string[]> } = {};
     try {
-      const parsed: unknown = await response.json();
-      if (typeof parsed === 'object' && parsed !== null) body = parsed as { code?: string; message?: string; fields?: Record<string, string[]> };
+      const parsed: unknown = JSON.parse(rawText);
+      if (typeof parsed === 'object' && parsed !== null) {
+        body = parsed as { code?: string; message?: string; fields?: Record<string, string[]> };
+      }
     } catch {
       body = {};
+    }
+    if (body.message === undefined) {
+      const snippet = rawText.replace(/\s+/g, ' ').trim().slice(0, 200);
+      body = {
+        ...body,
+        message: `HTTP ${response.status} ${response.statusText || ''}${snippet ? ` — ${snippet}` : ''}`.trim(),
+      };
     }
     throw new PantaError(response.status, body);
   }
@@ -218,11 +244,11 @@ export class PantaClient {
     if (opts?.cursor) params.set('cursor', opts.cursor);
     if (opts?.category) params.set('category', opts.category);
     const query = params.toString();
-    return this.json(`markets${query ? `?${query}` : ''}`);
+    return this.json(`markets/${query ? `?${query}` : ''}`);
   }
 
   async getMarket(id: string): Promise<unknown> {
-    return this.json(`markets/${encodeURIComponent(id)}`);
+    return this.json(`markets/${encodeURIComponent(id)}/`);
   }
 
   async getMarketTrades(marketId: string): Promise<unknown> {
@@ -242,23 +268,26 @@ export class PantaClient {
   }
 
   async getCategories(): Promise<unknown> {
-    return this.json('categories');
+    return this.json('categories/');
   }
 
   async getPositions(wallet: string): Promise<unknown> {
-    return this.json(`positions?wallet=${encodeURIComponent(wallet)}`);
+    return this.json(`positions/?wallet=${encodeURIComponent(wallet)}`);
   }
 
+  // ---- create pipeline -------------------------------------------------
+  // These three paths were originally fabricated by a code generator and returned
+  // HTTP 404 against the live API. Each one below was verified with a live call.
   async quoteCreateMarket(body: QuoteCreateRequest): Promise<unknown> {
-    return this.json('quote/create-market', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    return this.json('markets/create/quote/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   }
 
   async buildCreateTransaction(createId: string): Promise<unknown> {
-    return this.json(`create/${encodeURIComponent(createId)}/transaction`);
+    return this.json('markets/create/build/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ createId }) });
   }
 
   async registerMarket(createId: string, signature: string): Promise<unknown> {
-    return this.json(`create/${encodeURIComponent(createId)}/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signature }) });
+    return this.json('markets/create/register/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ createId, signature }) });
   }
 
   async reportTrade(body: TradeReport): Promise<unknown> {
